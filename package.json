@@ -1,0 +1,24 @@
+{
+  "name": "get_current_rol",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "excel4node": "^1.8.0",
+    "fs-extra": "^10.1.0",
+    "jsdom": "^21.0.0",
+    "nodejs-nodemailer-outlook": "^1.2.4",
+    "playwright": "^1.25.2",
+    "sequelize": "^6.25.0",
+    "sqlite3": "^5.1.2",
+    "table-data-to-json": "^1.0.1",
+    "tabletojson": "^2.0.7"
+  }
+}

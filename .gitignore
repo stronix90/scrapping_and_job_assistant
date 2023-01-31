@@ -1,0 +1,8 @@
+.env
+*.MD
+*.xlsx
+*.sqlite
+*_data.json
+/src/process/mock/*
+/node_modules
+/SANDBOX

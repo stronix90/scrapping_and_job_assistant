@@ -1,0 +1,12 @@
+// Use this structure to define your data. Then save as "userList_data.json"
+
+[
+    {
+        "name": "Mario",
+        "last": false
+    },
+    {
+        "name": "Maria",
+        "last": false
+    }
+]
