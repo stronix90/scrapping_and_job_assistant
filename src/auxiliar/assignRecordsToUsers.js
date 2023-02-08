@@ -2,7 +2,7 @@ const { dirname } = require("path");
 const appDir = dirname(require.main.filename)
 const path = require("path");
 
-const { writeJSONSync } = require("./manageJSONFile")
+const { writeJSONSync, readJSON } = require("./manageJSONFile")
 
 function assignRecordsTousers(records, userList, userFieldName = "user") {
 
@@ -20,6 +20,9 @@ function assignRecordsTousers(records, userList, userFieldName = "user") {
 
 
     // Proceso
+
+    let newPointer = ""
+
     for (let i = userStartIndex; i < usersCount + userStartIndex; i++) {
         const iMod = i % usersCount
         let qtyToAssign = recordsPerUser
@@ -28,10 +31,10 @@ function assignRecordsTousers(records, userList, userFieldName = "user") {
             qtyToAssign++
 
             extrasPend--
-            if (extrasPend === 0) {
-                userList.map(user => user.last = false)
-                userList[iMod].last = true
-            }
+
+            // Get new pointer
+            if (extrasPend === 0)
+                newPointer = userList[iMod].name
         }
         flatAssigned.push(...Array(qtyToAssign).fill(userList[iMod].name))
     }
@@ -42,7 +45,28 @@ function assignRecordsTousers(records, userList, userFieldName = "user") {
         return null
     })
 
-    writeJSONSync(path.resolve("src/process/specials/warehouse/userList_data.json"), userList)
+    // Update pointer in file
+    // const userListResponse = await 
+
+    if (newPointer !== "") {
+        readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
+            .then(fileUserLists => {
+                return fileUserLists.map(user => {
+                    if (user.name === newPointer) {
+                        return { ...user, last: true }
+                    }
+                    else {
+                        return { ...user, last: false }
+                    }
+                })
+            })
+            .then(newFileUserLists =>
+                writeJSONSync(path.resolve("src/process/specials/warehouse/userList_data.json"), newFileUserLists)
+            )
+    }
+
+
+
     return records
 }
 

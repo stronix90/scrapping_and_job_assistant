@@ -11,7 +11,8 @@ async function assignWarehouseApprovers(requests) {
     
 
     // Get User List
-    const userList = await readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
+    const userListResponse = await readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
+    const userList = userListResponse.filter(user => user.active)
 
 
     // Connect to DB and define Almacenes Model

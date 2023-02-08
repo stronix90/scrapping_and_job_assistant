@@ -9,6 +9,7 @@ const sendEmail = async (to, subject, data) => {
         },
         from: CONFIG.email.from,
         to: to,
+        cc: "brian.luna@trenesargentinos.gob.ar",
         subject: subject,
         html: JSON.stringify(data),
         replyTo: CONFIG.email.reply,

@@ -54,9 +54,13 @@ async function catalogacionProcess(requests, { path, fixedFileName }) {
         ? `./${fixedFileName}.xlsx`
         : `${path}/${fixedFileName}.xlsx`
 
-    createExcel(requestsOutput[0], filepath);
 
-    console.log("Archivo Excel de Catalogación generado con éxito");
+    try {
+        createExcel(requestsOutput[0], filepath);
+    } catch (error) {
+        console.log("*** EL ARCHIVO ESTÁ ABIERTO, NO SE PUDO GRABAR ***")
+        console.log(error)
+    }
 
 }
 

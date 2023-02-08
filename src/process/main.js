@@ -1,4 +1,5 @@
 const { chromium, request } = require("playwright");
+const path = require("path");
 
 const { delay } = require("../auxiliar/auxiliar");
 const checkDensity = require("./specials/catalogacion/checkDensity");
@@ -6,26 +7,30 @@ const getRequestInfo = require("./getRecordData");
 const warehouseProcess = require("./specials/warehouse");
 const catalogacionProcess = require("./specials/catalogacion");
 const CONFIG = require("./../config");
+const { readJSON } = require("../auxiliar/manageJSONFile");
 const DELAY_BEETWEEN_REQUESTS = 1200000;
 
 
 const runGetDataFromTablero = async (config) => {
     const browser = await chromium.launch(config.browser.headless);
-    let hora = new Date().getHours()
-    let day = new Date().getDay() // 0 = domingo, 6 = sabado
-    let previusDay = undefined
+    let currentDate = new Date()
+    let hora = currentDate.getHours()
+    let day = currentDate.getDay() // 0 = domingo, 6 = sabado
+    const response = await readJSON(path.resolve("src/temp.json"))
+    let previusDay = new Date(response.warehousePreviousDays) || undefined
+
 
     do {
 
         const enabledToRun = CONFIG.env.dev
             ? true
-            : (hora > 6 && hora < 18) && day != 0 && day != 6
+            : (hora >= 6 && hora < 18) && day != 0 && day != 6
 
         if (enabledToRun) {
 
             // ** GET REQUESTS **
             const requests = CONFIG.env.mock
-                ? require("./mock/caño")
+                ? require("../DB/mock/caño")
                 : await mainProcess(browser, config)
 
 
@@ -35,7 +40,8 @@ const runGetDataFromTablero = async (config) => {
                     request.mensajeDensidad = checkDensity(request)
 
                 } catch (error) {
-                    throw new Error(error.message, "Error en postprocesamiento general. Se detendrá el proceso")
+                    request.mensajeDensidad = "Contacte con soporte. No se pudo obtener los datos"
+                    console.log(error.message, request.id)
                 }
                 return null
             })
@@ -43,8 +49,8 @@ const runGetDataFromTablero = async (config) => {
             // ** SPECIAL POST PROCESS **
 
             // One execution per day
-            if (day != previusDay) {
-                previusDay = day
+            if (currentDate.toLocaleDateString() != previusDay.toLocaleDateString()) {
+                previusDay = currentDate
                 warehouseProcess(requests, config.output.warehouse)
             }
 
@@ -52,10 +58,14 @@ const runGetDataFromTablero = async (config) => {
             catalogacionProcess(requests, config.output.catalogacion)
 
         }
+        else {
+            console.log(`Día y horario no operativo. ${new Date().toLocaleString()}`)
+        }
 
         await delay(DELAY_BEETWEEN_REQUESTS)
-        hora = new Date().getHours()
-        day = new Date().getDay()
+        currentDate = new Date()
+        hora = currentDate.getHours()
+        day = currentDate.getDay() // 0 = domingo, 6 = sabado
 
     } while (true);
 }
