@@ -14,4 +14,12 @@ function diffDateToday(date) {
     return Math.round(diff).toString();
 };
 
-module.exports = { delay, convUsToArDate, diffDateToday }
+function groupArrayByKey(array, key) {
+    return array.reduce((group, item) => {
+        group[item[key]] = group[item[key]] ?? [];
+        group[item[key]].push(item);
+        return group;
+    }, {});
+}
+
+module.exports = { delay, convUsToArDate, diffDateToday, groupArrayByKey }

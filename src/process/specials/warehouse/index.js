@@ -3,77 +3,27 @@ const assignWarehouseApprovers = require("./assignWarehouseApprovers")
 const createExcel = require("../../../auxiliar/convertJSONtoExcel");
 const prepareEmail = require("../../../auxiliar/prepareEmail");
 const sendEmail = require("../../../auxiliar/sendEmail");
-const { delay } = require("../../../auxiliar/auxiliar");
+const { delay, groupArrayByKey } = require("../../../auxiliar/auxiliar");
+const { readJSON } = require("../../../auxiliar/manageJSONFile");
+const path = require("path");
 
 
-async function warehouseProcess(requests, { path }) {
+async function warehouseProcess(requests, { path: pathDestination }) {
+    const userLists = await readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
 
-    // const userEmail = {
-    //     "Varela": "brian.luna@trenesargentinos.gob.ar",
-    //     "De Luca": "brian.luna@trenesargentinos.gob.ar",
-    //     "Gonzalez": "brian.luna@trenesargentinos.gob.ar",
-    //     "Gianoli": "brian.luna@trenesargentinos.gob.ar",
-    //     "Damelli": "brian.luna@trenesargentinos.gob.ar",
-    //     "Gomez": "brian.luna@trenesargentinos.gob.ar",
-    //     "Alcaraz": "brian.luna@trenesargentinos.gob.ar",
-    //     "Rocha": "brian.luna@trenesargentinos.gob.ar"
-    // }
-    const userEmail = {
-        "Varela": "sebastian.varela@trenesargentinos.gob.ar",
-        "De Luca": "ezequiel.deluca@trenesargentinos.gob.ar",
-        "Gonzalez": "oscarsergio.gonzalez@trenesargentinos.gob.ar",
-        "Gianoli": "vanesa.gianoli@trenesargentinos.gob.ar",
-        "Damelli": "ezequiel.damelli@trenesargentinos.gob.ar",
-        "Gomez": "marcelo.gomez@trenesargentinos.gob.ar",
-        "Alcaraz": "gaston.alcaraz@trenesargentinos.gob.ar",
-        "Rocha": "hernan.rocha@trenesargentinos.gob.ar"
-    }
-
+    // Assign approvers
     const assignedWarehouseApprovers = await assignWarehouseApprovers(requests)
 
     // Group by approvers
-    const requestsGroupByApprovers = assignedWarehouseApprovers.reduce((group, request) => {
-        const { USUARIO } = request;
-        group[USUARIO] = group[USUARIO] ?? [];
-        group[USUARIO].push(request);
-        return group;
-    }, {});
+    const requestsGroupByApprovers = groupArrayByKey(assignedWarehouseApprovers, "USUARIO")
 
-
-    // Send email to each approver
-    console.log("Se van a enviar ", Object.keys(requestsGroupByApprovers).length, "email")
-
-    for (const key in requestsGroupByApprovers) {
-        if (requestsGroupByApprovers.hasOwnProperty(key)) {
-            const solicitudes = requestsGroupByApprovers[key];
-
-
-
-            if (solicitudes.length > 0) {
-                solicitudes
-                    .sort((a, b) => b["Días demorada"] - a["Días demorada"])
-                    .map(solicitud => {
-                        const date = new Date(solicitud["Fecha Asignación"]).toLocaleDateString()
-                        solicitud["Fecha Asignación"] = date
-                    })
-
-                const html = prepareEmail(solicitudes)
-                sendEmail(userEmail[key], `Solicitudes de almacenes. ${key}`, html)
-
-                console.log(`Email enviado a ${key}`)
-
-                await delay(30000)
-            }
-
-
-        }
-    }
-
+    // Enviar email
+    sendEmailFromObject(requestsGroupByApprovers, userLists)
 
     // Create excel
     const filepath = CONFIG.env.dev
         ? `./almacenes.xlsx`
-        : `${path}/almacenes.xlsx`
+        : `${pathDestination}/almacenes.xlsx`
 
     try {
         createExcel(assignedWarehouseApprovers, filepath)
@@ -83,6 +33,32 @@ async function warehouseProcess(requests, { path }) {
         console.log(error)
     }
 
+}
+
+async function sendEmailFromObject(object, userListsEmail) {
+
+    console.log("Se van a enviar ", Object.keys(object).length, "email")
+
+    for (const username in object) {
+        const solicitudes = object[username];
+        const email = userListsEmail.find(user => user.name === username).email
+
+        if (solicitudes.length > 0) {
+            solicitudes
+                .sort((a, b) => b["Días demorada"] - a["Días demorada"])
+                .map(solicitud => {
+                    const date = new Date(solicitud["Fecha Asignación"]).toLocaleDateString()
+                    solicitud["Fecha Asignación"] = date
+                })
+
+            const html = prepareEmail(solicitudes)
+
+            console.log(`Enviando email a ${username}`)
+            sendEmail(email, `Solicitudes de almacenes. ${username}`, html)
+
+            await delay(30000)
+        }
+    }
 }
 
 module.exports = warehouseProcess

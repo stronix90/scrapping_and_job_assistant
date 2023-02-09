@@ -1,6 +1,5 @@
-const { chromium, request } = require("playwright");
+const { chromium } = require("playwright");
 const path = require("path");
-
 const { delay } = require("../auxiliar/auxiliar");
 const checkDensity = require("./specials/catalogacion/checkDensity");
 const getRequestInfo = require("./getRecordData");
@@ -17,7 +16,7 @@ const runGetDataFromTablero = async (config) => {
     let hora = currentDate.getHours()
     let day = currentDate.getDay() // 0 = domingo, 6 = sabado
     const response = await readJSON(path.resolve("src/temp.json"))
-    let previusDay = new Date(response.warehousePreviousDays) || undefined
+    let previusDay = new Date(response.warehousePreviousDays) || new Date("2000-1-1")
 
 
     do {

@@ -1,14 +1,13 @@
 const path = require("path");
-
 const assignRecordsTousers = require("../../../auxiliar/assignRecordsToUsers");
-const { readJSON } = require("../../../auxiliar/manageJSONFile");
+const { readJSON, updateJsonFilePointer } = require("../../../auxiliar/manageJSONFile");
 const { DBConnection, createTableBasedOnObject } = require("../../../DB/manageDB");
 const { AlmacenModel } = require("../../../DB/models");
 
 
 async function assignWarehouseApprovers(requests) {
     const userFieldName = "warehouseUser"
-    
+
 
     // Get User List
     const userListResponse = await readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
@@ -37,12 +36,19 @@ async function assignWarehouseApprovers(requests) {
         WHERE prev.${userFieldName} IS NULL
         `);
 
-    const assignedWarehouseRequests = assignRecordsTousers(unassignedWarehouseRequests[0], userList, userFieldName)
-    await historicalWarehouseAssignmentsTable.bulkCreate(
-        assignedWarehouseRequests,
-        { updateOnDuplicate: [userFieldName, "updatedAt"] }
-    )
+    // If there are no new records
+    if (unassignedWarehouseRequests[0].length > 0) {
+        const { records: assignedWarehouseRequests, newPointer } = assignRecordsTousers(unassignedWarehouseRequests[0], userList, userFieldName)
 
+        // Update pointer in file
+        updateJsonFilePointer(path.resolve("src/process/specials/warehouse/userList_data.json"), "name", newPointer)
+
+        // Update table
+        await historicalWarehouseAssignmentsTable.bulkCreate(
+            assignedWarehouseRequests,
+            { updateOnDuplicate: [userFieldName, "updatedAt"] }
+        )
+    }
 
     // Get all new records
     const requestsOutput = await DB.query(`

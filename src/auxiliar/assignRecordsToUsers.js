@@ -1,9 +1,3 @@
-const { dirname } = require("path");
-const appDir = dirname(require.main.filename)
-const path = require("path");
-
-const { writeJSONSync, readJSON } = require("./manageJSONFile")
-
 function assignRecordsTousers(records, userList, userFieldName = "user") {
 
     // Inicialización de variables
@@ -18,56 +12,33 @@ function assignRecordsTousers(records, userList, userFieldName = "user") {
 
     const flatAssigned = []
 
-
-    // Proceso
-
     let newPointer = ""
 
+
+    // Recorre lista de usuarios y establece la cantidad de registros a asignar a cada uno
     for (let i = userStartIndex; i < usersCount + userStartIndex; i++) {
         const iMod = i % usersCount
-        let qtyToAssign = recordsPerUser
+        let recordsForCurrentUser = recordsPerUser
 
         if (extras > 0 && extrasPend > 0) {
-            qtyToAssign++
-
             extrasPend--
+            recordsForCurrentUser++
+
 
             // Get new pointer
             if (extrasPend === 0)
                 newPointer = userList[iMod].name
         }
-        flatAssigned.push(...Array(qtyToAssign).fill(userList[iMod].name))
+        flatAssigned.push(...Array(recordsForCurrentUser).fill(userList[iMod].name))
     }
 
-    // Resultado
+    // Recorre lista de registros y asigna el usuario correspondiente
     records.map((record, index) => {
         record[userFieldName] = flatAssigned[index]
         return null
     })
 
-    // Update pointer in file
-    // const userListResponse = await 
-
-    if (newPointer !== "") {
-        readJSON(path.resolve("src/process/specials/warehouse/userList_data.json"))
-            .then(fileUserLists => {
-                return fileUserLists.map(user => {
-                    if (user.name === newPointer) {
-                        return { ...user, last: true }
-                    }
-                    else {
-                        return { ...user, last: false }
-                    }
-                })
-            })
-            .then(newFileUserLists =>
-                writeJSONSync(path.resolve("src/process/specials/warehouse/userList_data.json"), newFileUserLists)
-            )
-    }
-
-
-
-    return records
+    return { records, newPointer }
 }
 
 module.exports = assignRecordsTousers
