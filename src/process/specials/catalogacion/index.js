@@ -5,9 +5,12 @@ const checkPrice = require("./checkPrice");
 const checkBrand = require("./checkBrand");
 
 
-async function catalogacionProcess(requests, { path, fixedFileName }) {
+async function catalogacionProcess(requests, { path, fixedFileName }, firstRun) {
 
-    checkBrand(requests)
+    // Subprocess, One execution per day
+    if (firstRun) {
+        checkBrand(requests)
+    }
 
     // Insert special catalogación calculated data
     requests.map(request => {

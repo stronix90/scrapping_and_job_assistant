@@ -29,24 +29,27 @@ function checkDensity({ [adicionalesObj._02_01_unidadMedidaBase]: UMB, "02.02. U
         default:
             throw new Error("La Key PESO UNIDAD no tiene un valor válido")
     }
-    const weighKG = weight * weightMultiplier
+    const weighKG = Number(weight * weightMultiplier)
 
 
     // Normalice volume to CM3
     switch (volumenUnit) {
         case "MM3 - MILIMETROS CUBICOS":
-            length = length / 10
-            width = width / 10
-            heigth = heigth / 10
+            length = Number(length / 10)
+            width = Number(width / 10)
+            heigth = Number(heigth / 10)
             break;
 
         case "CM3 - CENTIMETROS CUBICOS":
+            length = Number(length)
+            width = Number(width)
+            heigth = Number(heigth)
             break;
 
         case "M3 - METROS CUBICOS":
-            length = length * 100
-            width = width * 100
-            heigth = heigth * 100
+            length = Number(length * 100)
+            width = Number(width * 100)
+            heigth = Number(heigth * 100)
             break;
 
         default:
@@ -58,6 +61,7 @@ function checkDensity({ [adicionalesObj._02_01_unidadMedidaBase]: UMB, "02.02. U
     let mensaje = ""
     switch (UMB) {
         case "M - METROS":
+            console.log(typeof length)
             if (!(length === 100 || width === 100 || heigth === 100))
                 mensaje += "Al menos una medida debe ser de 1 Metro o su equivante"
             break;

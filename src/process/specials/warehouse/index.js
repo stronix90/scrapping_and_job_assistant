@@ -53,7 +53,6 @@ async function sendEmailFromObject(object, userListsEmail) {
 
             const html = prepareEmail(solicitudes)
 
-            console.log(`Enviando email a ${username}`)
             sendEmail(email, `Solicitudes de almacenes. ${username}`, html)
 
             await delay(30000)

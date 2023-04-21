@@ -12,6 +12,10 @@ const sendEmail = async (to, subject, data) => {
         to = CONFIG.email.devReceiver
     }
 
+    else if (CONFIG.email.type === "real") {
+        console.log("Enviando email a ", to)
+    }
+
     else {
         console.log("Tipo de procesamiento de email incorrecto. No se enviará")
         return
@@ -24,12 +28,15 @@ const sendEmail = async (to, subject, data) => {
         },
         from: CONFIG.email.from,
         to: to,
-        cc: "brian.luna@trenesargentinos.gob.ar",
+        cc: "brian.luna@trenesargentinos.gob.ar; ivan.lucero@trenesargentinos.gob.ar ; luz.cardenas@trenesargentinos.gob.ar",
         subject: subject,
         html: JSON.stringify(data),
         replyTo: CONFIG.email.reply,
-        onError: (e) => console.error(e),
-        onSuccess: (i) => console.info(i)
+        onError: (e) => {
+            console.log("Error al enviar email")
+            console.error(e)
+            console.log("Error al enviar email")
+        },
     });
 }
 
